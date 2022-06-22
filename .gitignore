@@ -1,2 +1,7 @@
 exp/
 stats/
+dump/
+data/
+past_data/
+datasets/
+models/

@@ -9,19 +9,26 @@ services:
       resources:
         reservations:
           devices:
-            - capabilities: [gpu]
+            # - driver: nvidia
+              - capabilities: [gpu]
     volumes:
-      - /mnt/c/projects/espnet_docker/mount:/mount
-      - /mnt/c/datasets:/datasets
+      - ./mount:/mount
+      - ./models:/models
+      - ./datasets:/datasets
+      - ./mount/java:/workspace/espnet/egs2/java
+      - ./mount/multilingual:/workspace/espnet/egs2/multilingual
+      - ./mount/test_pretrain_with_commonvoice:/workspace/espnet/egs2/test_pretrain_with_commonvoice
+      - ./mount/test_pretrain_covost2:/workspace/espnet/egs2/test_pretrain_covost2
     ulimits:
       memlock: -1
       stack: 67108864
     shm_size: 16gb
-    command: bash -c "cd /mount && ./run.sh"
+    command: bash -c "cd /mount/java/asr1 && ./run.sh"
+    # command: bash -c "ls"
   tensorboard:
     image: dleongsh/tensorboard:latest
     ports:
       - 6006:6006
     volumes:
-      - /mnt/c/projects/espnet_docker/mount:/mount
+      - ./mount:/mount
     command: tensorboard --logdir /mount --host 0.0.0.0 --port 6006
