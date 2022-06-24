@@ -5,6 +5,9 @@ set -e
 set -u
 set -o pipefail
 
+main_folder=
+pretrained_model=
+
 cwd=$PWD
 cd /workspace/espnet/egs2/mini_an4/asr1
 
@@ -21,3 +24,5 @@ cd /workspace/espnet/egs2/mini_an4/asr1
     --asr_config "${cwd}/tuning/train_asr_transformer.yaml" \
     --inference_config "${cwd}/tuning/decode_transformer.yaml"
     # --use_lm false \
+
+cd ${cwd}
