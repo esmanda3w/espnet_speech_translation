@@ -12,19 +12,17 @@ services:
             # - driver: nvidia
               - capabilities: [gpu]
     volumes:
+      - /home/digitalhub/Desktop/projects/datasets:/datasets
       - ./mount:/mount
       - ./models:/models
-      - ./datasets:/datasets
       - ./mount/java:/workspace/espnet/egs2/java
       - ./mount/multilingual:/workspace/espnet/egs2/multilingual
-      - ./mount/test_pretrain_with_commonvoice:/workspace/espnet/egs2/test_pretrain_with_commonvoice
-      - ./mount/test_pretrain_covost2:/workspace/espnet/egs2/test_pretrain_covost2
+      - ./mount/st_covost2:/workspace/espnet/egs2/st_covost2
     ulimits:
       memlock: -1
       stack: 67108864
     shm_size: 16gb
-    command: bash -c "cd /mount/java/asr1 && ./run.sh"
-    # command: bash -c "ls"
+    command: bash -c "cd /mount/st_covost2/st1 && ./run.sh"
   tensorboard:
     image: dleongsh/tensorboard:latest
     ports:
