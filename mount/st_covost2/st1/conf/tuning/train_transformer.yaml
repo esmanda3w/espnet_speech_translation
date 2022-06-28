@@ -13,7 +13,7 @@ encoder_conf:
     input_layer: conv2d
     num_blocks: 12
     linear_units: 2048
-    dropout_rate: 0.3
+    dropout_rate: 0.1
     output_size: 256  # dimension of attention
     attention_heads: 4
     attention_dropout_rate: 0.0

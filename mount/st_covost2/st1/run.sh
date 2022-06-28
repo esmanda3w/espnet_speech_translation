@@ -18,10 +18,6 @@ tgt_nbpe=1000
 src_case=lc.rm
 tgt_case=lc.rm
 
-train_set=train.${src_lang}-${tgt_lang}
-train_dev=valid.${src_lang}-${tgt_lang}
-test_sets="test.${src_lang}-${tgt_lang} valid.${src_lang}-${tgt_lang}"
-
 st_config=conf/train_st.yaml
 inference_config=conf/decode_st.yaml
 
@@ -71,13 +67,21 @@ if [ ${tgt_lang} == ja ] || [ ${tgt_lang} == zh-CN ]; then
 fi
 
 main_folder=st_covost2
-# sub_folder=dropout0.3_no_pretrain_4gb_moses
+# sub_folder=dropout0.5_no_pretrain_4gb_moses
 sub_folder=test_clearml
 data_folder=/datasets/id_en
+# data_tag=
+data_tag=test_clearml
+
+train_set=train_${data_tag}.${src_lang}-${tgt_lang}
+train_dev=valid_${data_tag}.${src_lang}-${tgt_lang}
+test_sets="test_${data_tag}.${src_lang}-${tgt_lang} valid_${data_tag}.${src_lang}-${tgt_lang}"
+
+. utils/parse_options.sh || exit 1;
 
 ./st.sh \
     --stage 1 \
-    --local_data_opts "--stage 1 --src_lang ${src_lang} --tgt_lang ${tgt_lang} --dst_data_folder ${data_folder}" \
+    --local_data_opts "--stage 0 --src_lang ${src_lang} --tgt_lang ${tgt_lang} --data_folder ${data_folder} --data_tag ${data_tag}" \
     --ngpu 1 \
     --speed_perturb_factors "${speed_perturb_factors}" \
     --use_lm false \
@@ -105,3 +109,5 @@ data_folder=/datasets/id_en
     --st_exp "/mount/exp/${main_folder}/${sub_folder}/st_exp" \
     --st_stats_dir "/mount/exp/${main_folder}/${sub_folder}/st_stats"
     # --pretrained_asr "/mount/exp/java/id/pretrain_default_config_4gb/asr_exp/valid.acc.ave.pth"
+    # --src_bpe_train_text "data/train.${src_lang}-${tgt_lang}/text.${src_case}.${src_lang}" \
+    # --tgt_bpe_train_text "data/train.${src_lang}-${tgt_lang}/text.${tgt_case}.${tgt_lang}" \

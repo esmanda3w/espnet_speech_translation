@@ -11,13 +11,13 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     # og path
-    parser.add_argument("--src_language",                   type=str, help="Language code of the source language for the transcript")
-    parser.add_argument("--tgt_language",                   type=str, help="Language code of the target language for the transcript")
-    parser.add_argument("--annotated_data_filepath",        type=str, help="Path of the annotated_data folder from jtubespeech")
-    parser.add_argument("--dest_annotated_data_filepath",   type=str, help="Path of the annotated_data folder to be written in wav.scp")
-    parser.add_argument("--train_data_split",               type=str, help="Percentage of dataset to be used for training")
-    parser.add_argument("--validation_data_split",          type=str, help="Percentage of dataset to be used for validation")
-    parser.add_argument("--test_data_split",                type=str, help="Percentage of dataset to be used for testing")
+    parser.add_argument("--src_language",               type=str, help="Language code of the source language for the transcript")
+    parser.add_argument("--tgt_language",               type=str, help="Language code of the target language for the transcript")
+    parser.add_argument("--annotated_data_filepath",    type=str, help="Path of the annotated_data folder to be written in wav.scp")
+    parser.add_argument("--data_tag",                   type=str, help="Tag to differentiate data folder from data folders of other experiments")
+    parser.add_argument("--train_data_split",           type=str, help="Percentage of dataset to be used for training")
+    parser.add_argument("--validation_data_split",      type=str, help="Percentage of dataset to be used for validation")
+    parser.add_argument("--test_data_split",            type=str, help="Percentage of dataset to be used for testing")
     
     return parser.parse_args(sys.argv[1:])
 
@@ -29,28 +29,30 @@ Note that the train-validation-test split is based on a random split and the res
 specified percentages exactly.
 '''
 class KaldiDataGenerator:
-    def __init__(self, src_language, tgt_language, annotated_data_filepath, dest_annotated_data_filepath, 
+    def __init__(self, src_language, tgt_language, annotated_data_filepath, data_tag,
                  train_data_split, validation_data_split, test_data_split):
         assert train_data_split + validation_data_split + test_data_split == 100, 'The three percentages should sum to 100'
 
         self.src_language = src_language
         self.tgt_language = tgt_language
         self.annotated_data_filepath = annotated_data_filepath
-        self.dest_annotated_data_filepath = dest_annotated_data_filepath
         self.train_data_split = train_data_split
         self.validation_data_split = validation_data_split
         self.test_data_split = test_data_split
+        self.train_folder = f'train_{data_tag}'
+        self.valid_folder = f'valid_{data_tag}'
+        self.test_folder = f'test_{data_tag}'
 
         random.seed(42)
         
 
     def generate_files(self):
-        if os.path.isdir('./data'):
-            raise Exception("Data directory already exists! Skipping data prep")
+        # if os.path.isdir('./data'):
+        #     raise Exception("Data directory already exists! Skipping data prep")
 
-        Path('./data/train').mkdir(parents=True, exist_ok=True)
-        Path('./data/valid').mkdir(parents=True, exist_ok=True)
-        Path('./data/test').mkdir(parents=True, exist_ok=True)
+        Path(f'./data/{self.train_folder}').mkdir(parents=True, exist_ok=True)
+        Path(f'./data/{self.valid_folder}').mkdir(parents=True, exist_ok=True)
+        Path(f'./data/{self.test_folder}').mkdir(parents=True, exist_ok=True)
         # Path('./data/videos').mkdir(parents=True, exist_ok=True)
 
         self._create_text_file()
@@ -59,17 +61,17 @@ class KaldiDataGenerator:
 
 
     def _create_text_file(self):
-        train_text_file = open(f'./data/train/text','a')
-        valid_text_file = open(f'./data/valid/text','a')
-        test_text_file = open(f'./data/test/text','a')
+        train_text_file = open(f'./data/{self.train_folder}/text','a')
+        valid_text_file = open(f'./data/{self.valid_folder}/text','a')
+        test_text_file = open(f'./data/{self.test_folder}/text','a')
 
-        train_src_text_file = open(f'./data/train/text.{self.src_language}','a')
-        valid_src_text_file = open(f'./data/valid/text.{self.src_language}','a')
-        test_src_text_file = open(f'./data/test/text.{self.src_language}','a')
+        train_src_text_file = open(f'./data/{self.train_folder}/text.{self.src_language}','a')
+        valid_src_text_file = open(f'./data/{self.valid_folder}/text.{self.src_language}','a')
+        test_src_text_file = open(f'./data/{self.test_folder}/text.{self.src_language}','a')
 
-        train_tgt_text_file = open(f'./data/train/text.{self.tgt_language}','a')
-        valid_tgt_text_file = open(f'./data/valid/text.{self.tgt_language}','a')
-        test_tgt_text_file = open(f'./data/test/text.{self.tgt_language}','a')
+        train_tgt_text_file = open(f'./data/{self.train_folder}/text.{self.tgt_language}','a')
+        valid_tgt_text_file = open(f'./data/{self.valid_folder}/text.{self.tgt_language}','a')
+        test_tgt_text_file = open(f'./data/{self.test_folder}/text.{self.tgt_language}','a')
 
         for root, dirs, files in os.walk(self.annotated_data_filepath):
             for file in files:
@@ -97,10 +99,15 @@ class KaldiDataGenerator:
                             or self._has_numbers(' '.join(src_line.split(' ')[1:])):
                             continue
 
-                        # Subset dataset
-                        half = random.randint(0, 100)
-                        if half < 33:
+                        # Because not all wav files are in the subset uploaded to clearml
+                        wav_filename = src_line.replace(f'_{self.src_language}', '').split(' ')[0] + '.wav'
+                        if not os.path.exists(os.path.join(root, wav_filename)):
                             continue
+
+                        # # Subset dataset
+                        # half = random.randint(0, 100)
+                        # if half < 33:
+                        #     continue
                         
                         # Remove language tag from the utterance id
                         src_line = src_line.replace(f'_{self.src_language}', '')
@@ -138,7 +145,7 @@ class KaldiDataGenerator:
     def _create_spk2utt_file(self):
         # List of every utt_id in the data
         utt_id_list = ''
-        for data_type in ['train', 'valid', 'test']:
+        for data_type in [self.train_folder, self.valid_folder, self.test_folder]:
             text_file = open(f'./data/{data_type}/text','r')
 
             for line in text_file:
@@ -155,7 +162,7 @@ class KaldiDataGenerator:
     def _create_wav_file(self):
         # Requires the manual step of copying the annotated_data folder to the folder 
         # containing your recipe in espnet
-        for data_type in ['train', 'valid', 'test']:
+        for data_type in [self.train_folder, self.valid_folder, self.test_folder]:
             text_file = open(f'./data/{data_type}/text','r')
             wav_file = open(f'./data/{data_type}/wav.scp','w')
 
@@ -164,7 +171,7 @@ class KaldiDataGenerator:
                 utt_id = line[:16]
                 # Extract enclosing folder name (first 8 chars of utterance id)
                 folder_containing_wav_file = utt_id[:8]
-                wav_filepath = f'{self.dest_annotated_data_filepath}/{folder_containing_wav_file}/{utt_id}.wav'
+                wav_filepath = f'{self.annotated_data_filepath}/{folder_containing_wav_file}/{utt_id}.wav'
                 wav_file.write(f'{utt_id} {wav_filepath}\n')
         
         print('Done: Creating wav file')
@@ -175,12 +182,12 @@ if __name__ == "__main__":
     gen = KaldiDataGenerator(args.src_language,
                              args.tgt_language,
                              args.annotated_data_filepath, 
-                             args.dest_annotated_data_filepath,
+                             args.data_tag, 
                              int(args.train_data_split),
                              int(args.validation_data_split),
                              int(args.test_data_split))
 
-    try:
-        gen.generate_files()
-    except Exception as e:
-        print("Warning: ", e)
+    # try:
+    gen.generate_files()
+    # except Exception as e:
+    #     print("Warning: ", e)

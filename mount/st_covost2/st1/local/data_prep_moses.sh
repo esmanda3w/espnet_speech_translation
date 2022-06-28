@@ -3,18 +3,14 @@
 # Copyright 2021 Kyoto University (Hirofumi Inaguma)
 #  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 . ./path.sh || exit 1;
+
+src_lang=
+tgt_lang=
+data_tag=
+
 . utils/parse_options.sh || exit 1;
 
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <src-lang> <tgt-lang>"
-    echo "e.g.: $0 source_lang target_lang"
-    exit 1;
-fi
-
-src_lang=$1
-tgt_lang=$2
-
-for set in train valid test; do
+for set in train_${data_tag} valid_${data_tag} test_${data_tag}; do
     dst=data/dump/${set}.${src_lang}-${tgt_lang}
     mkdir -p ${dst} || exit 1;
 

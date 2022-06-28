@@ -14,8 +14,8 @@ stage=0
 stop_stage=100
 src_lang=id
 tgt_lang=en
-src_data_folder="/datasets/id_en"
-dst_data_folder=
+data_folder=
+data_tag=
 train_data_split=80
 valid_data_split=10
 test_data_split=10
@@ -39,26 +39,26 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     python3 local/data_prep.py \
         --src_language ${src_lang} \
         --tgt_language ${tgt_lang} \
-        --annotated_data_filepath ${src_data_folder} \
-        --dest_annotated_data_filepath ${dst_data_folder} \
+        --annotated_data_filepath ${data_folder} \
+        --data_tag ${data_tag} \
         --train_data_split ${train_data_split} \
         --validation_data_split ${valid_data_split} \
         --test_data_split ${test_data_split}
 
     for set in train valid test; do
-        utils/spk2utt_to_utt2spk.pl data/${set}/spk2utt > data/${set}/utt2spk
-        utils/fix_data_dir.sh data/${set}
+        utils/spk2utt_to_utt2spk.pl data/${set}_${data_tag}/spk2utt > data/${set}_${data_tag}/utt2spk
+        utils/fix_data_dir.sh data/${set}_${data_tag}
     done
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     log "stage 1: Renaming directories"
     for set in train valid test; do
-        mv data/${set} data/${set}.${src_lang}-${tgt_lang}
+        mv data/${set}_${data_tag} data/${set}_${data_tag}.${src_lang}-${tgt_lang}
     done
 fi
 
 if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     log "stage 2: Text Preprocessing with Moses (tokenization, case, punctuation marks etc.)"
-    local/data_prep_moses.sh ${src_lang} ${tgt_lang}
+    local/data_prep_moses.sh --src_lang ${src_lang} --tgt_lang ${tgt_lang} --data_tag ${data_tag}
 fi

@@ -6,7 +6,7 @@ Task.add_requirements('setuptools', '59.5.0')
 task = Task.init(
     project_name = 'espnet_speech_translation',
     task_name = 'test_st_covost2',
-    output_uri = 's3://experiment-logging/storage/espnet'
+    output_uri = 's3://experiment-logging/storage/espnet',
 )
 
 task.set_base_docker('dleongsh/espnet:202205-torch1.10-cu113-runtime')
@@ -20,9 +20,12 @@ dataset_path = clearml_dataset.get_local_copy()
 # clearml_model = Model(model_id='...')
 # model_path = clearml_model.get_local_copy()
 
+data_tag = "test_clearml"
+
 subprocess.run([
     './run.sh',
     '--data_folder', dataset_path,
+    '--data_tag', data_tag,
     # '--pretrained_model', model_path,
     ])
 

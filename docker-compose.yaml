@@ -22,7 +22,7 @@ services:
       memlock: -1
       stack: 67108864
     shm_size: 16gb
-    command: bash -c "cd /mount/st_covost2/st1 && ./run.sh"
+    command: bash -c "cd /mount/st_covost2/st1 && ./run.sh --data_folder /datasets/st_id_data_2gb"
   tensorboard:
     image: dleongsh/tensorboard:latest
     ports:
