@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 from clearml import Task, Model, Dataset
 Task.add_requirements('setuptools', '59.5.0')
@@ -15,12 +16,15 @@ task.execute_remotely(queue_name='compute', clone=False, exit_process=True)
 # download dataset
 clearml_dataset = Dataset.get(dataset_id='9904e5f0fe2e4ddcb56defe61d3c1b0a')
 dataset_path = clearml_dataset.get_local_copy()
+# "ds.clearml9927dhdwu278e8/espnet/"
 
 # # download model
 # clearml_model = Model(model_id='...')
 # model_path = clearml_model.get_local_copy()
 
 data_tag = "test_clearml"
+
+shutil.copytree('../../st_covost2', '/workspace/espnet/egs2/st_covost2')
 
 subprocess.run([
     './run.sh',
