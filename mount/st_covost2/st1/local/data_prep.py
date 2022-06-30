@@ -43,6 +43,9 @@ class KaldiDataGenerator:
         self.valid_folder = f'valid_{data_tag}'
         self.test_folder = f'test_{data_tag}'
 
+        print("DEBUG: data path: ", self.annotated_data_filepath)
+        print("DEBUG: ls data folder: ", os.listdir(self.annotated_data_filepath))
+
         random.seed(42)
         
 
