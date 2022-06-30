@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument("--src_language",               type=str, help="Language code of the source language for the transcript")
     parser.add_argument("--tgt_language",               type=str, help="Language code of the target language for the transcript")
     parser.add_argument("--annotated_data_filepath",    type=str, help="Path of the annotated_data folder to be written in wav.scp")
-    parser.add_argument("--data_tag",                   type=str, help="Tag to differentiate data folder from data folders of other experiments")
+    parser.add_argument("--data_tag",                   type=str, default="", help="Optional tag to differentiate data folder from data folders of other experiments")
     parser.add_argument("--train_data_split",           type=str, help="Percentage of dataset to be used for training")
     parser.add_argument("--validation_data_split",      type=str, help="Percentage of dataset to be used for validation")
     parser.add_argument("--test_data_split",            type=str, help="Percentage of dataset to be used for testing")
@@ -54,6 +54,9 @@ class KaldiDataGenerator:
         Path(f'./data/{self.valid_folder}').mkdir(parents=True, exist_ok=True)
         Path(f'./data/{self.test_folder}').mkdir(parents=True, exist_ok=True)
         # Path('./data/videos').mkdir(parents=True, exist_ok=True)
+        
+        print("DEBUG: cwd: ", os.getcwd())
+        print("DEBUG: ls: ", os.listdir(os.getcwd()))
 
         self._create_text_file()
         self._create_spk2utt_file()
@@ -76,6 +79,7 @@ class KaldiDataGenerator:
         for root, dirs, files in os.walk(self.annotated_data_filepath):
             for file in files:
                 if file.endswith(f'{self.src_language}.trans.txt'):
+                    print("DEBUG: fn: ", file)
                     src_transcript = open(os.path.join(root, file),'r')
                     
                     # Construct target filename from source filename
@@ -96,7 +100,7 @@ class KaldiDataGenerator:
 
                         # Remove lines with numbers
                         if self._has_numbers(' '.join(src_line.split(' ')[1:])) \
-                            or self._has_numbers(' '.join(src_line.split(' ')[1:])):
+                            or self._has_numbers(' '.join(tgt_line.split(' ')[1:])):
                             continue
 
                         # Because not all wav files are in the subset uploaded to clearml
@@ -115,14 +119,17 @@ class KaldiDataGenerator:
 
                         split_chance = random.randint(0,100)
                         if split_chance < self.train_data_split:
+                            print("DEBUG: writing in train txt")
                             train_text_file.write(src_line)
                             train_src_text_file.write(src_line)
                             train_tgt_text_file.write(tgt_line)
                         elif split_chance < self.train_data_split + self.validation_data_split:
+                            print("DEBUG: writing in valid txt")
                             valid_text_file.write(src_line)
                             valid_src_text_file.write(src_line)
                             valid_tgt_text_file.write(tgt_line)
                         else:
+                            print("DEBUG: writing in test txt")
                             test_text_file.write(src_line)
                             test_src_text_file.write(src_line)
                             test_tgt_text_file.write(tgt_line)
@@ -149,6 +156,7 @@ class KaldiDataGenerator:
             text_file = open(f'./data/{data_type}/text','r')
 
             for line in text_file:
+                print(f"DEBUG: line in {data_type} txt file: {line}")
                 # Extract utt_id (first 16 chars) from text file
                 utt_id_list += f' {line[:16]}'
 

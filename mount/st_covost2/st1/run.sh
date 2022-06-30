@@ -13,8 +13,10 @@ cd /workspace/espnet/egs2/st_covost2/st1
 src_lang=id
 tgt_lang=en
 
-src_nbpe=1000
-tgt_nbpe=1000
+# src_nbpe=1000
+# tgt_nbpe=1000
+src_nbpe=100
+tgt_nbpe=100
 src_case=lc.rm
 tgt_case=lc.rm
 
@@ -67,11 +69,15 @@ if [ ${tgt_lang} == ja ] || [ ${tgt_lang} == zh-CN ]; then
 fi
 
 main_folder=st_covost2
-# sub_folder=dropout0.5_no_pretrain_4gb_moses
+# sub_folder=bpe100_no_pretrain_4gb_moses
 sub_folder=test_clearml
-data_folder=/datasets/id_en
+data_folder=/datasets/test_data
 # data_tag=
 data_tag=test_clearml
+
+# train_set=train${data_tag}.${src_lang}-${tgt_lang}
+# train_dev=valid${data_tag}.${src_lang}-${tgt_lang}
+# test_sets="test${data_tag}.${src_lang}-${tgt_lang} valid${data_tag}.${src_lang}-${tgt_lang}"
 
 train_set=train_${data_tag}.${src_lang}-${tgt_lang}
 train_dev=valid_${data_tag}.${src_lang}-${tgt_lang}
@@ -91,9 +97,9 @@ test_sets="test_${data_tag}.${src_lang}-${tgt_lang} valid_${data_tag}.${src_lang
     --src_lang ${src_lang} \
     --tgt_lang ${tgt_lang} \
     --src_token_type "bpe" \
-    --src_nbpe $src_nbpe \
+    --src_nbpe ${src_nbpe} \
     --tgt_token_type "bpe" \
-    --tgt_nbpe $tgt_nbpe \
+    --tgt_nbpe ${tgt_nbpe} \
     --src_case ${src_case} \
     --tgt_case ${tgt_case} \
     --st_config "${st_config}" \
