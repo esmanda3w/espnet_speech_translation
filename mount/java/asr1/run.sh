@@ -9,12 +9,14 @@ cd /workspace/espnet/egs2/java/asr1
 
 lid=false # whether to use language id as additional label
 
-main_folder="java/ms"
-sub_folder="baseline"
+main_folder="java/cascade"
+sub_folder="inference"
+data_folder=/datasets/id_en
+data_tag=inference
 
-train_set=train
-train_dev=valid
-test_set="test_2gb test_4gb"
+train_set=train_${data_tag}
+train_dev=valid_${data_tag}
+test_sets="test_${data_tag}"
 
 train_model=jv_openslr35
 bpe_model=bpe_unigram1000
@@ -31,8 +33,8 @@ cp /models/${train_model}/feats_stats.npz /mount/exp/${main_folder}/${sub_folder
 
 # Run stage 1-4, 9-13
 ./asr.sh \
-    --stage 12 \
-    --stop_stage 13 \
+    --stage 1 \
+    --stop_stage 1 \
     --ngpu 1 \
     --nj 80 \
     --inference_nj 256 \
@@ -47,13 +49,12 @@ cp /models/${train_model}/feats_stats.npz /mount/exp/${main_folder}/${sub_folder
     --train_set "${train_set}" \
     --valid_set "${train_dev}" \
     --test_sets "${test_set}" \
-    --local_data_opts "--train_set ${train_set} --valid_set ${train_dev} --test_sets ${test_set}" \
     --lm_train_text "data/${train_set}/text" \
     --local_score_opts "--score_lang_id ${lid}" "$@" \
     --lm_exp "/mount/exp/${main_folder}/${sub_folder}/lm_exp" \
     --lm_stats_dir "/mount/exp/${main_folder}/${sub_folder}/lm_stats" \
     --asr_exp "/mount/exp/${main_folder}/${sub_folder}/asr_exp" \
     --asr_stats_dir "/mount/exp/${main_folder}/${sub_folder}/asr_stats" \
-    --pretrained_model "/models/jv_openslr35/valid.acc.best.pth" \
+    --pretrained_model "/models/${train_model}/valid.acc.best.pth" \
     --inference_asr_model "valid.acc.best.pth" \
     --ignore_init_mismatch "true"
