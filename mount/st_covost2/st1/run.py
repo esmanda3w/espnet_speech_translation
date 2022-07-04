@@ -14,10 +14,13 @@ task.set_base_docker('dleongsh/espnet:202205-torch1.10-cu113-runtime')
 task.execute_remotely(queue_name='compute', clone=False, exit_process=True)
 
 # download dataset
-clearml_dataset = Dataset.get(dataset_id='d1ef7778c97f404dadf1eb77eb8cd069')
-dataset_path = clearml_dataset.get_local_copy()
-print(dataset_path)
-print(os.listdir(dataset_path))
+clearml_train_dataset = Dataset.get(dataset_id='e5231a33cf6349e5ab9857c904f9d891')
+train_dataset_path = clearml_train_dataset.get_local_copy()
+print(train_dataset_path)
+print(os.listdir(train_dataset_path))
+
+clearml_test_dataset = Dataset.get(dataset_id='8068aea0cd8c4068ad560d3946742347')
+test_dataset_path = clearml_test_dataset.get_local_copy()
 
 # # download model
 # clearml_model = Model(model_id='...')
@@ -25,11 +28,13 @@ print(os.listdir(dataset_path))
 
 data_tag = "test_clearml"
 
+shutil.copytree('../../../scripts', '/scripts', symlinks=True)
 shutil.copytree('../../st_covost2', '/workspace/espnet/egs2/st_covost2', symlinks=True)
 
 subprocess.run([
     './run.sh',
-    '--data_folder', dataset_path,
+    '--train_data_folder', train_dataset_path,
+    '--test_data_folder', test_dataset_path,
     '--data_tag', data_tag,
     # '--pretrained_model', model_path,
     ])
