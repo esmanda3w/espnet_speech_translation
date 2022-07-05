@@ -6,7 +6,7 @@ Task.add_requirements('setuptools', '59.5.0')
 
 task = Task.init(
     project_name = 'espnet_speech_translation',
-    task_name = 'test_st_covost2',
+    task_name = 'bpe300_no_pretrain_2gb_moses',
     output_uri = 's3://experiment-logging/storage/espnet',
 )
 
@@ -16,8 +16,6 @@ task.execute_remotely(queue_name='compute', clone=False, exit_process=True)
 # download dataset
 clearml_train_dataset = Dataset.get(dataset_id='e5231a33cf6349e5ab9857c904f9d891')
 train_dataset_path = clearml_train_dataset.get_local_copy()
-print(train_dataset_path)
-print(os.listdir(train_dataset_path))
 
 clearml_test_dataset = Dataset.get(dataset_id='8068aea0cd8c4068ad560d3946742347')
 test_dataset_path = clearml_test_dataset.get_local_copy()
@@ -26,7 +24,14 @@ test_dataset_path = clearml_test_dataset.get_local_copy()
 # clearml_model = Model(model_id='...')
 # model_path = clearml_model.get_local_copy()
 
-data_tag = "test_clearml"
+data_tag = "2gb_clean"
+
+# Work-around for nltk crash
+shutil.copytree('../../../nltk_data', '/root/nltk_data', symlinks=True)
+# Path(f'/root/nltk_data/taggers/').mkdir(parents=True, exist_ok=True)
+# Path(f'/root/nltk_data/corpora/').mkdir(parents=True, exist_ok=True)
+# shutil.copy('../../../nltk/averaged_perceptron_tagger.zip', '/root/nltk_data/taggers/averaged_perceptron_tagger.zip')
+# shutil.copy('../../../nltk/cmudict.zip', '/root/nltk_data/corpora/cmudict.zip')
 
 shutil.copytree('../../../scripts', '/scripts', symlinks=True)
 shutil.copytree('../../st_covost2', '/workspace/espnet/egs2/st_covost2', symlinks=True)
@@ -40,10 +45,10 @@ subprocess.run([
     ])
 
 output_dirs = {
-    'lm_exp': "./exp/st_covost2/test_clearml/lm_exp",
-    'lm_stats_dir': "./exp/st_covost2/test_clearml/lm_stats",
-    'st_exp': "./exp/st_covost2/test_clearml/st_exp",
-    'st_stats_dir': "./exp/st_covost2/test_clearml/st_stats",
+    # 'lm_exp': "./exp/st_covost2/test_clearml/lm_exp",
+    # 'lm_stats_dir': "./exp/st_covost2/test_clearml/lm_stats",
+    'st_exp': "./exp/st_covost2/bpe300_no_pretrain_2gb_moses/st_exp",
+    'st_stats_dir': "./exp/st_covost2/bpe300_no_pretrain_2gb_moses/st_stats",
 }
 
 for key in output_dirs.keys():

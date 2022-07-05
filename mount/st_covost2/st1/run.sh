@@ -39,6 +39,8 @@ test_data_folder=/datasets/test_id_data_1gb_cleaned
 # data_tag=
 data_tag=2gb_clean
 
+st_exp=/mount/exp/${main_folder}/${sub_folder}/st_exp
+
 # train_set=train${data_tag}.${src_lang}-${tgt_lang}
 # train_dev=valid${data_tag}.${src_lang}-${tgt_lang}
 # test_sets="test${data_tag}.${src_lang}-${tgt_lang} valid${data_tag}.${src_lang}-${tgt_lang}"
@@ -76,8 +78,18 @@ test_sets="test_${data_tag}.${src_lang}-${tgt_lang} valid_${data_tag}.${src_lang
     --lm_train_text "data/${train_set}/text.${tgt_case}.${tgt_lang}"  "$@" \
     --lm_exp "/mount/exp/${main_folder}/${sub_folder}/lm_exp" \
     --lm_stats_dir "/mount/exp/${main_folder}/${sub_folder}/lm_stats" \
-    --st_exp "/mount/exp/${main_folder}/${sub_folder}/st_exp" \
+    --st_exp "${st_exp}" \
     --st_stats_dir "/mount/exp/${main_folder}/${sub_folder}/st_stats"
     # --pretrained_asr "/mount/exp/java/id/pretrain_default_config_4gb/asr_exp/valid.acc.ave.pth"
     # --src_bpe_train_text "data/train.${src_lang}-${tgt_lang}/text.${src_case}.${src_lang}" \
     # --tgt_bpe_train_text "data/train.${src_lang}-${tgt_lang}/text.${tgt_case}.${tgt_lang}" \
+
+# Show results in Markdown syntax
+if [[ ${tgt_case} == "lc.rm" ]]; then
+    case=lc
+else
+    case=${tgt_case}
+fi
+
+scripts/utils/show_translation_result.sh --case ${case} "${st_exp}" > "${st_exp}"/RESULTS.md
+cat "${st_exp}"/RESULTS.md
