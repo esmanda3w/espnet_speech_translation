@@ -4,9 +4,11 @@ import subprocess
 from clearml import Task, Model, Dataset
 Task.add_requirements('setuptools', '59.5.0')
 
+task_name = 'baseline_inference'
+
 task = Task.init(
     project_name = 'espnet_speech_translation',
-    task_name = 'bpe300_no_pretrain_2gb_moses',
+    task_name = task_name,
     output_uri = 's3://experiment-logging/storage/espnet',
 )
 
@@ -20,35 +22,32 @@ train_dataset_path = clearml_train_dataset.get_local_copy()
 clearml_test_dataset = Dataset.get(dataset_id='8068aea0cd8c4068ad560d3946742347')
 test_dataset_path = clearml_test_dataset.get_local_copy()
 
+data_tag = "2gb_clean"
+
 # # download model
 # clearml_model = Model(model_id='...')
 # model_path = clearml_model.get_local_copy()
 
-data_tag = "2gb_clean"
-
 # Work-around for nltk crash
 shutil.copytree('../../../nltk_data', '/root/nltk_data', symlinks=True)
-# Path(f'/root/nltk_data/taggers/').mkdir(parents=True, exist_ok=True)
-# Path(f'/root/nltk_data/corpora/').mkdir(parents=True, exist_ok=True)
-# shutil.copy('../../../nltk/averaged_perceptron_tagger.zip', '/root/nltk_data/taggers/averaged_perceptron_tagger.zip')
-# shutil.copy('../../../nltk/cmudict.zip', '/root/nltk_data/corpora/cmudict.zip')
-
 shutil.copytree('../../../scripts', '/scripts', symlinks=True)
 shutil.copytree('../../st_covost2', '/workspace/espnet/egs2/st_covost2', symlinks=True)
 
 subprocess.run([
     './run.sh',
+    '--subfolder', task_name,
     '--train_data_folder', train_dataset_path,
     '--test_data_folder', test_dataset_path,
     '--data_tag', data_tag,
     # '--pretrained_model', model_path,
     ])
 
+
 output_dirs = {
     # 'lm_exp': "./exp/st_covost2/test_clearml/lm_exp",
     # 'lm_stats_dir': "./exp/st_covost2/test_clearml/lm_stats",
-    'st_exp': "./exp/st_covost2/bpe300_no_pretrain_2gb_moses/st_exp",
-    'st_stats_dir': "./exp/st_covost2/bpe300_no_pretrain_2gb_moses/st_stats",
+    'st_exp': f"./exp/st_covost2/{task_name}/st_exp",
+    'st_stats_dir': f"./exp/st_covost2/{task_name}/st_stats",
 }
 
 for key in output_dirs.keys():
