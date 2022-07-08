@@ -48,7 +48,7 @@ test_sets="test_${data_tag}.${src_lang}-${tgt_lang} valid_${data_tag}.${src_lang
 . utils/parse_options.sh || exit 1;
 
 ./st.sh \
-    --stage 2 \
+    --stage 1 \
     --local_data_opts "--stage 0 --src_lang ${src_lang} --tgt_lang ${tgt_lang} --train_data_folder ${train_data_folder} --test_data_folder ${test_data_folder} --data_tag ${data_tag}" \
     --ngpu 1 \
     --speed_perturb_factors "${speed_perturb_factors}" \
