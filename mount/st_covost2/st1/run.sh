@@ -15,10 +15,10 @@ cd /workspace/espnet/egs2/st_covost2/st1
 src_lang=id
 tgt_lang=en
 
-src_nbpe=1000
-tgt_nbpe=1000
-# src_nbpe=300
-# tgt_nbpe=300
+# src_nbpe=1000
+# tgt_nbpe=1000
+src_nbpe=500
+tgt_nbpe=500
 src_case=lc.rm
 tgt_case=lc.rm
 
@@ -39,13 +39,19 @@ train_data_folder=/datasets/id_data_2gb_cleaned
 test_data_folder=/datasets/test_id_data_1gb_cleaned
 data_tag=2gb_clean
 
-st_exp=${cwd}/exp/${main_folder}/${sub_folder}/st_exp
-
 train_set=train_${data_tag}.${src_lang}-${tgt_lang}
 train_dev=valid_${data_tag}.${src_lang}-${tgt_lang}
 test_sets="test_${data_tag}.${src_lang}-${tgt_lang} valid_${data_tag}.${src_lang}-${tgt_lang}"
 
+local_run=false
+
 . utils/parse_options.sh || exit 1;
+
+if "${local_run}"; then
+    cwd=/mount
+fi
+
+st_exp=${cwd}/exp/${main_folder}/${sub_folder}/st_exp
 
 ./st.sh \
     --stage 1 \
