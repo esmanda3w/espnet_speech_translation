@@ -4,7 +4,7 @@ import subprocess
 from clearml import Task, Model, Dataset
 Task.add_requirements('setuptools', '59.5.0')
 
-task_name = 'baseline_inference'
+task_name = 'finetune_2gb_clean'
 
 task = Task.init(
     project_name = 'espnet_speech_translation',
@@ -35,7 +35,7 @@ shutil.copytree('../../st_covost2', '/workspace/espnet/egs2/st_covost2', symlink
 
 subprocess.run([
     './run.sh',
-    '--subfolder', task_name,
+    '--sub_folder', task_name,
     '--train_data_folder', train_dataset_path,
     '--test_data_folder', test_dataset_path,
     '--data_tag', data_tag,
