@@ -4,7 +4,7 @@ import subprocess
 from clearml import Task, Model, Dataset
 Task.add_requirements('setuptools', '59.5.0')
 
-task_name = 'finetune_2gb_clean'
+task_name = 'bpe800_finetune_2gb_clean'
 
 task = Task.init(
     project_name = 'espnet_speech_translation',
@@ -22,8 +22,6 @@ train_dataset_path = clearml_train_dataset.get_local_copy()
 clearml_test_dataset = Dataset.get(dataset_id='8068aea0cd8c4068ad560d3946742347')
 test_dataset_path = clearml_test_dataset.get_local_copy()
 
-data_tag = "2gb_clean"
-
 # # download model
 # clearml_model = Model(model_id='...')
 # model_path = clearml_model.get_local_copy()
@@ -38,7 +36,6 @@ subprocess.run([
     '--sub_folder', task_name,
     '--train_data_folder', train_dataset_path,
     '--test_data_folder', test_dataset_path,
-    '--data_tag', data_tag,
     # '--pretrained_model', model_path,
     ])
 

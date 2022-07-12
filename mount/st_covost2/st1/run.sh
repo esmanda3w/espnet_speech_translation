@@ -17,8 +17,8 @@ tgt_lang=en
 
 # src_nbpe=1000
 # tgt_nbpe=1000
-src_nbpe=500
-tgt_nbpe=500
+src_nbpe=800
+tgt_nbpe=800
 src_case=lc.rm
 tgt_case=lc.rm
 
