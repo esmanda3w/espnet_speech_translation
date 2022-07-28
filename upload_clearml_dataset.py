@@ -1,9 +1,9 @@
 #### PARAMS ####
 
 DATASET_PROJECT = 'datasets/speech_translation'
-DATASET_NAME = 'test_audio'
-LOCAL_DATASET_DIR = '/home/daniel/projects/AudioModules/test_audio'
-ARTIFACT_PATHS = ['/home/daniel/projects/AudioModules/test_audio/manifest.json',]
+DATASET_NAME = 'test_id_data_1gb_cleaned'
+LOCAL_DATASET_DIR = '/home/digitalhub/Desktop/projects/datasets/test_id_data_1gb_cleaned'
+ARTIFACT_PATHS = []
 
 # s3://<server url>:<port>/<bucket>/...
 OUTPUT_URI = 's3://experiment-logging/storage/datasets'
