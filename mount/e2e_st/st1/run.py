@@ -28,8 +28,9 @@ test_dataset_path = clearml_test_dataset.get_local_copy()
 
 # Work-around for nltk crash
 shutil.copytree('../../../nltk_data', '/root/nltk_data', symlinks=True)
+
 shutil.copytree('../../../scripts', '/scripts', symlinks=True)
-shutil.copytree('../../st_covost2', '/workspace/espnet/egs2/st_covost2', symlinks=True)
+shutil.copytree('../../e2e_st', '/workspace/espnet/egs2/e2e_st', symlinks=True)
 
 subprocess.run([
     './run.sh',
@@ -41,10 +42,10 @@ subprocess.run([
 
 
 output_dirs = {
-    # 'lm_exp': "./exp/st_covost2/test_clearml/lm_exp",
-    # 'lm_stats_dir': "./exp/st_covost2/test_clearml/lm_stats",
-    'st_exp': f"./exp/st_covost2/{task_name}/st_exp",
-    'st_stats_dir': f"./exp/st_covost2/{task_name}/st_stats",
+    # 'lm_exp': "./exp/e2e_st/test_clearml/lm_exp",
+    # 'lm_stats_dir': "./exp/e2e_st/test_clearml/lm_stats",
+    'st_exp': f"./exp/e2e_st/{task_name}/st_exp",
+    'st_stats_dir': f"./exp/e2e_st/{task_name}/st_stats",
 }
 
 for key in output_dirs.keys():
