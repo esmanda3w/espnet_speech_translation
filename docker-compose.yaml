@@ -15,14 +15,19 @@ services:
       - /home/digitalhub/Desktop/projects/datasets:/datasets
       - ./mount:/mount
       - ./models:/models
+      - ./scripts:/scripts
       - ./mount/java:/workspace/espnet/egs2/java
-      - ./mount/multilingual:/workspace/espnet/egs2/multilingual
-      - ./mount/st_covost2:/workspace/espnet/egs2/st_covost2
+      - ./mount/mt_test:/workspace/espnet/egs2/mt_test
+      - ./mount/e2e_st:/workspace/espnet/egs2/e2e_st
+      - ./nltk_data:/root/nltk_data
     ulimits:
       memlock: -1
       stack: 67108864
     shm_size: 16gb
-    command: bash -c "cd /mount/st_covost2/st1 && ./run.sh --data_folder /datasets/st_id_data_2gb"
+    # command: bash -c "cd /mount/java/asr1 && ./run.sh"
+    # command: bash -c "cd /mount/mt_test/mt1 && ./run.sh"
+    # command: bash -c "cd /mount/cascade && ./run.sh"
+    # command: bash -c "cd /mount/e2e_st/st1 && ./run.sh --local_run true"
   tensorboard:
     image: dleongsh/tensorboard:latest
     ports:
