@@ -13,9 +13,7 @@ The directory structure of this project is as follows.
     │   └── cascade/         # Cascade-ST recipe
     │   └── e2e_st/          # E2E-ST recipe
     │   └── java/            # ASR recipe (using a pretrained model trained on Javanese)
-    │   └── mini_anr/        # test recipe
     │   └── mt_test/         # MT recipe
-    │   └── multilingual/    # ASR recipe (using a pretrained model trained on multiple languages)
     ├── nltk_data/   # pre-downloaded nltk packages to prevent crash when downloading in pipeline
     └── scripts/     # scripts used across different recipes
 
