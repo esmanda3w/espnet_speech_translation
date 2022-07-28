@@ -7,151 +7,186 @@ set -o pipefail
 
 ##### GENERAL CONFIG #####
 
+# Language related
 src_lang=id
 tgt_lang=en
 
+# Experiment folder related
 cascade_main_folder=cascade
-cascade_sub_folder=test_inference
+cascade_sub_folder=lm_finetune_6gb_clean_asr_bpe1000_batchbin500000_6gb_moses_mt
 
+# ASR experiment folder
 asr_main_folder="java"
-asr_exp_folder="java/id/pretrain_default_config_4gb"
+asr_package_model_name=lm_finetune_6gb_clean_asr
 
+# MT experiment folder
 mt_main_folder="mt_test"
-mt_exp_folder="mt_test/test_own_data"
+mt_package_model_name=bpe1000_batchbin500000_6gb_moses_mt
 
-train_data_folder=/datasets/id_data_2gb_cleaned
+# Data related
+train_data_folder=/datasets/id_data_2gb_cleaned       # not actually used but required to run
 test_data_folder=/datasets/test_id_data_1gb_cleaned
-data_tag=inference
+data_tag=infer
+
+skip_asr=false
+skip_mt=false
 
 ##########################
+
+. utils/parse_options.sh || exit 1;
 
 #########################
 ##### ASR INFERENCE #####
 #########################
 
-cd /workspace/espnet/egs2/${asr_main_folder}/asr1
+if ! "${skip_asr}"; then
 
-bpe_model=bpe_unigram1000
+    cd /workspace/espnet/egs2/${asr_main_folder}/asr1
 
-##### SETTING UP ASR #####
+    ##### SETTING UP ASR #####
 
-# Copying ASR config file and model
-mkdir -p /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/
-cp /mount/exp/${asr_exp_folder}/asr_exp/config.yaml /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/
-cp /mount/exp/${asr_exp_folder}/asr_exp/valid.acc.best.pth /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/
+    bpe_model=bpe_unigram1000
+    inference_asr_model=valid.acc.best.pth
+    use_lm=true
+    lm_model=valid.loss.ave.pth
 
-# Creating model's token list
-pyscripts/utils/make_token_list_from_config.py /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/config.yaml
-mkdir -p data/token_list/${bpe_model}/
-cp /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/tokens.txt data/token_list/${bpe_model}/
+    # Copying ASR config file and model
+    mkdir -p /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/
+    cp /models/${asr_package_model_name}/config.yaml /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/
+    cp /models/${asr_package_model_name}/${inference_asr_model} /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/
 
-# TODO: change this to the packaged asr model dir
-cp /models/jv_openslr35/bpe.model data/token_list/${bpe_model}/
-##########################
+    # Reconfigure feats_stats path in config.py
+    python3 /scripts/modify_asr_config.py \
+        --config_file_path  /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/config.yaml \
+        --feats_stats_path /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_stats/train/feats_stats.npz
 
-inference_config=conf/decode_asr.yaml
+    # Creating model's token list
+    mkdir -p data/token_list/${bpe_model}/
+    cp /models/${asr_package_model_name}/tokens.txt data/token_list/${bpe_model}/
 
-asr_train_set=train_${data_tag}
-asr_train_dev=valid_${data_tag}
-asr_test_sets="test_${data_tag}"
+    # Copying the bpe model
+    cp /models/${asr_package_model_name}/${bpe_model}/bpe.model data/token_list/${bpe_model}/
 
-# Run stage 1-4, 9-13
-for stage in 1 2 3 4 9 10 12 13; do
-    ./asr.sh \
-        --stage ${stage} \
-        --stop_stage ${stage} \
-        --local_data_opts "--src_lang ${src_lang} --tgt_lang ${tgt_lang} --train_data_folder ${train_data_folder} --test_data_folder ${test_data_folder} --data_tag ${data_tag}" \
-        --ngpu 1 \
-        --inference_args "--batch_size 1" \
-        --use_lm false \
-        --token_type bpe \
-        --nbpe 1000 \
-        --feats_type raw \
-        --inference_config "${inference_config}" \
-        --train_set "${asr_train_set}" \
-        --valid_set "${asr_train_dev}" \
-        --test_sets "${asr_test_sets}" \
-        --asr_exp "/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp" \
-        --asr_stats_dir "/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_stats" \
-        --inference_asr_model "valid.acc.best.pth" \
-
-    if [[ ${stage} -eq 10 ]]; then
-        python3 /scripts/modify_asr_config.py \
-            --config_file_path  /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/config.yaml \
-            --feats_stats_path /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_stats/train/feats_stats.npz
+    if "${use_lm}"; then
+        mkdir -p /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/lm_exp/
+        cp /models/${asr_package_model_name}/lm/config.yaml /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/lm_exp/
+        cp /models/${asr_package_model_name}/lm/${lm_model} /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/lm_exp/
     fi
 
-done
+    ##########################
+
+    # Decode config related
+    inference_config=conf/decode_asr.yaml
+
+    # Data related 
+    asr_train_set=train_${data_tag}
+    asr_train_dev=valid_${data_tag}
+    asr_test_sets="test_${data_tag}"
+
+    # Run stage 1-4, 9-13
+    for stage in 1 2 3 4 9 10 12 13; do
+        ./asr.sh \
+            --stage ${stage} \
+            --stop_stage ${stage} \
+            --local_data_opts "--src_lang ${src_lang} --tgt_lang ${tgt_lang} --train_data_folder ${train_data_folder} --test_data_folder ${test_data_folder} --data_tag ${data_tag}" \
+            --ngpu 1 \
+            --use_lm ${use_lm} \
+            --token_type bpe \
+            --nbpe 1000 \
+            --feats_type raw \
+            --inference_config "${inference_config}" \
+            --train_set "${asr_train_set}" \
+            --valid_set "${asr_train_dev}" \
+            --test_sets "${asr_test_sets}" \
+            --lm_exp "/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/lm_exp" \
+            --lm_stats_dir "/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/lm_stats" \
+            --asr_exp "/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp" \
+            --asr_stats_dir "/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_stats" \
+            --inference_asr_model ${inference_asr_model}
+
+    done
+fi
 
 ########################
 ##### MT INFERENCE #####
 ########################
+if ! "${skip_mt}"; then
 
-cd /workspace/espnet/tools && make moses.done
-cd /workspace/espnet/egs2/${mt_main_folder}/mt1
+    cd /workspace/espnet/tools && make moses.done
+    cd /workspace/espnet/egs2/${mt_main_folder}/mt1
 
-##### SETTING UP MT #####
+    ##### SETTING UP MT #####
 
-mkdir -p /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/mt_exp/
-cp /mount/exp/${mt_exp_folder}/mt_exp/config.yaml /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/mt_exp/
-cp /mount/exp/${mt_exp_folder}/mt_exp/valid.acc.best.pth /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/mt_exp/
+    inference_mt_model=valid.acc.ave.pth
 
-#########################
+    mkdir -p /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/mt_exp/
+    cp /models/${mt_package_model_name}/config.yaml /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/mt_exp/
+    cp /models/${mt_package_model_name}/${inference_mt_model} /mount/exp/${cascade_main_folder}/${cascade_sub_folder}/mt_exp/
 
-src_nbpe=1000
-tgt_nbpe=1000
-src_case=lc.rm
-tgt_case=lc.rm
+    #########################
 
-inference_config=conf/decode_mt.yaml
+    # Tokenization related
+    src_nbpe=1000
+    tgt_nbpe=1000
+    src_case=lc.rm
+    tgt_case=lc.rm
 
-asr_inference_text=/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/*/*/text
-local_data_opts="--stage 0 \
-                 --src_lang ${src_lang} \
-                 --tgt_lang ${tgt_lang} \
-                 --train_data_folder ${train_data_folder} \
-                 --test_data_folder ${test_data_folder} \
-                 --data_tag ${data_tag} \
-                 --asr_inference_text ${asr_inference_text}"
-cascade_mt_exp=/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/mt_exp
+    # Decode config related
+    inference_config=conf/decode_mt.yaml
 
-mt_train_set=train_${data_tag}.${src_lang}-${tgt_lang}
-mt_train_dev=valid_${data_tag}.${src_lang}-${tgt_lang}
-mt_test_sets="test_${data_tag}.${src_lang}-${tgt_lang}"
+    # Cascade ASR output into MT input
+    asr_inference_text=/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/asr_exp/*/*/text
+    local_data_opts="--stage 0 \
+                    --src_lang ${src_lang} \
+                    --tgt_lang ${tgt_lang} \
+                    --train_data_folder ${train_data_folder} \
+                    --test_data_folder ${test_data_folder} \
+                    --data_tag ${data_tag}
+                    --asr_inference_text ${asr_inference_text}"
+    
+    # Path of experiment folder
+    cascade_mt_exp=/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/mt_exp
 
-# Run stages 1-2, 11-12 (need use scoring fix)
-for stage in 1 2 11 12; do
-    ./mt.sh \
-        --stage ${stage} \
-        --stop_stage ${stage} \
-        --local_data_opts "${local_data_opts}" \
-        --ngpu 1 \
-        --use_lm false \
-        --feats_type raw \
-        --token_joint false \
-        --src_lang ${src_lang} \
-        --tgt_lang ${tgt_lang} \
-        --src_nbpe ${src_nbpe} \
-        --tgt_nbpe ${tgt_nbpe} \
-        --src_case ${src_case} \
-        --tgt_case ${tgt_case} \
-        --inference_config "${inference_config}" \
-        --train_set "${mt_train_set}" \
-        --valid_set "${mt_train_dev}" \
-        --test_sets "${mt_test_sets}" \
-        --src_bpe_train_text "data/${mt_train_set}/text.${src_case}.${src_lang}" \
-        --tgt_bpe_train_text "data/${mt_train_set}/text.${tgt_case}.${tgt_lang}" \
-        --mt_exp "${cascade_mt_exp}" \
-        --mt_stats_dir "/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/mt_stats" \
-        --inference_mt_model "valid.acc.best.pth"
-done
+    # Data related
+    mt_train_set=train_${data_tag}.${src_lang}-${tgt_lang}
+    mt_train_dev=valid_${data_tag}.${src_lang}-${tgt_lang}
+    mt_test_sets="test_${data_tag}.${src_lang}-${tgt_lang}"
 
-# Show results in Markdown syntax
-if [[ ${tgt_case} == "lc.rm" ]]; then
-    case=lc
-else
-    case=${tgt_case}
+    # Run stages 1-2, 11-12
+    for stage in 1 2 11 12; do
+        ./mt.sh \
+            --stage ${stage} \
+            --stop_stage ${stage} \
+            --local_data_opts "${local_data_opts}" \
+            --ngpu 1 \
+            --use_lm false \
+            --feats_type raw \
+            --token_joint false \
+            --src_lang ${src_lang} \
+            --tgt_lang ${tgt_lang} \
+            --src_nbpe ${src_nbpe} \
+            --tgt_nbpe ${tgt_nbpe} \
+            --src_case ${src_case} \
+            --tgt_case ${tgt_case} \
+            --inference_config ${inference_config} \
+            --train_set ${mt_train_set} \
+            --valid_set ${mt_train_dev} \
+            --test_sets ${mt_test_sets} \
+            --src_bpe_train_text "data/${mt_train_set}/text.${src_case}.${src_lang}" \
+            --tgt_bpe_train_text "data/${mt_train_set}/text.${tgt_case}.${tgt_lang}" \
+            --mt_exp "${cascade_mt_exp}" \
+            --mt_stats_dir "/mount/exp/${cascade_main_folder}/${cascade_sub_folder}/mt_stats" \
+            --inference_mt_model ${inference_mt_model}
+    done
+
+    # Show results in Markdown syntax
+    if [[ ${tgt_case} == "lc.rm" ]]; then
+        case=lc
+    else
+        case=${tgt_case}
+    fi
+
+    scripts/utils/show_translation_result.sh --case ${case} "${cascade_mt_exp}" > "${cascade_mt_exp}"/RESULTS.md
+    cat "${cascade_mt_exp}"/RESULTS.md
+
 fi
-
-scripts/utils/show_translation_result.sh --case ${case} "${cascade_mt_exp}" > "${cascade_mt_exp}"/RESULTS.md
-cat "${cascade_mt_exp}"/RESULTS.md

@@ -9,7 +9,7 @@ def parse_args():
     )
     # og path
     parser.add_argument("--config_file_path",   type=str, help="Path to the experiment directory where the predictions are stored (eg. xxx/yyy/asr_exp)")
-    parser.add_argument("--feats_stats_path",   type=str, help="Path to the experiment directory where the predictions are stored (eg. xxx/yyy/asr_exp)")
+    parser.add_argument("--feats_stats_path",   type=str, help="Path to the feats_stats.npz file (eg. xxx/yyy/feats_stats.npz)")
     
     return parser.parse_args(sys.argv[1:])
 
@@ -23,11 +23,8 @@ class ModifyASRConfig:
         new_config_file = open("./config.yaml", "w")
         
         for line in original_config_file:
-            print(line)
             if "stats_file:" in line:
                 new_line = line.split("stats_file:", 1)[0] + f"stats_file: {self.feats_stats_path}\n"
-                print(line)
-                print(new_line)
                 new_config_file.write(new_line)
             else:
                 new_config_file.write(line)
